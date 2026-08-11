@@ -102,4 +102,14 @@ config VELASENSE_EVENT_COOLDOWN
 	---help---
 		Minimum time between same-type events.
 
+config VELASENSE_MIMO_GATEWAY
+	bool "Build Mimo Token Plan phone-side gateway library"
+	default n
+	---help---
+		Build the Mimo API client, local fallback templates, and
+		privacy policy enforcement module.  These components run
+		on the phone-side gateway application, not on the wearable
+		device itself.  Enable for unit testing or if building
+		the phone app within the NuttX build tree.
+
 endif # VELASENSE

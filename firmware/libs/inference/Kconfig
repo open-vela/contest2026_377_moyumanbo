@@ -1,0 +1,95 @@
+# ===========================================================================
+# Kconfig -- VelaSense TinyML Inference Engine
+#
+# Menu path: VelaScene -> Inference
+#
+# These options control the inference engine behaviour, debug output, and
+# the rule-based gating thresholds that protect the ML pipeline from
+# unreliable sensor data.
+# ===========================================================================
+
+menu "Inference Engine"
+
+config VELASENSE_INFERENCE
+    bool "Enable TinyML inference engine"
+    default y
+    help
+        Build the INT8 quantised inference engine for emotion arousal
+        detection.  Disable to strip all ML code from the firmware
+        (useful for sensor-only debugging builds).
+
+config VELASENSE_RULE_GATE
+    bool "Enable rule-based gating before inference"
+    default y
+    depends on VELASENSE_INFERENCE
+    help
+        Run the rule gate before each inference pass.  If any sensor
+        health check fails the inference is skipped and a reason code
+        is returned to the caller.  Disabling this sends all samples
+        directly to the ML model.
+
+config TINYML_DEBUG
+    bool "Debug output for inference engine"
+    default n
+    depends on VELASENSE_INFERENCE
+    help
+        Enable verbose logging of quantisation parameters, layer
+        shapes, and per-layer timing.  Increases code size by ~800
+        bytes.  Do NOT enable in production builds.
+
+config TINYML_TIMING
+    bool "Report inference timing"
+    default y
+    depends on VELASENSE_INFERENCE
+    help
+        Measure wall-clock microseconds for each inference pass and
+        store the result in tinyml_result_t.inference_us.  Requires a
+        working microsecond timer (DWT->CYCCNT on Cortex-M).
+
+# ---------------------------------------------------------------------------
+# Rule gate thresholds
+# ---------------------------------------------------------------------------
+
+config RULE_SQI_MIN
+    float "Minimum PPG signal quality index (SQI)"
+    default 0.70
+    range 0.1 1.0
+    depends on VELASENSE_RULE_GATE
+    help
+        PPG signals with SQI below this threshold are rejected.
+        Valid range: 0.10 to 1.00.  Typical: 0.70.
+
+config RULE_TEMP_SLOPE_MAX
+    float "Max temperature slope (deg-C per minute)"
+    default 2.0
+    range 0.5 10.0
+    depends on VELASENSE_RULE_GATE
+    help
+        Reject samples when the skin temperature is changing faster
+        than this rate, as it indicates an environmental artefact
+        rather than a physiological response.  Typical: 2.0 C/min.
+
+config RULE_ACTIVITY_MAX
+    int "Maximum activity level to proceed (0-3)"
+    default 2
+    range 0 3
+    depends on VELASENSE_RULE_GATE
+    help
+        Activity intensity levels:
+          0 = rest / seated
+          1 = light (slow walk)
+          2 = moderate (brisk walk)
+          3 = vigorous (running / cycling)
+        Inference is skipped for activity above this level.
+        Typical: 2 (moderate).
+
+config RULE_BATTERY_MIN
+    int "Minimum battery percentage for inference"
+    default 5
+    range 0 50
+    depends on VELASENSE_RULE_GATE
+    help
+        When battery drops below this level the inference engine is
+        disabled to conserve power.  Set to 0 to disable this check.
+
+endmenu

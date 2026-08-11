@@ -1,0 +1,202 @@
+# VelaSense BLE Service Configuration
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+# Copyright (C) 2026 VelaSense Project
+
+config VELASENSE_BLE
+	bool "VelaSense BLE service"
+	default n
+	depends on BLUETOOTH
+	---help---
+	  Enable the VelaSense BLE GATT service for event synchronization,
+	  device configuration, OTA firmware updates, and status reporting.
+
+	  The BLE service provides a custom 128-bit UUID GATT service with
+	  six characteristics for communication with the companion phone app.
+
+if VELASENSE_BLE
+
+# --- Connection Parameters ---
+
+config BLE_CONN_INTERVAL_MIN
+	int "Minimum connection interval (units of 1.25ms)"
+	default 6
+	range 6 3200
+	---help---
+	  Minimum BLE connection interval.  Lower values reduce latency
+	  but increase power consumption.
+
+	    6  = 7.5ms  (minimum, lowest latency)
+	   12  = 15ms   (default, good balance)
+
+config BLE_CONN_INTERVAL_MAX
+	int "Maximum connection interval (units of 1.25ms)"
+	default 12
+	range 6 3200
+	---help---
+	  Maximum BLE connection interval.  The actual interval will be
+	  negotiated between min and max.
+
+	  Must be >= BLE_CONN_INTERVAL_MIN.
+
+config BLE_CONN_SLAVE_LATENCY
+	int "Slave latency (connection events to skip)"
+	default 0
+	range 0 499
+	---help---
+	  Number of connection events the peripheral may skip.
+	  0 means always responsive (required for real-time event delivery).
+	  Higher values save power but increase latency.
+
+config BLE_CONN_SUP_TIMEOUT
+	int "Supervision timeout (units of 10ms)"
+	default 400
+	range 10 3200
+	---help---
+	  Connection supervision timeout.  If no PDU is received within
+	  this time, the connection is considered lost.
+	    400 = 4 seconds (default)
+
+# --- Advertising ---
+
+config BLE_ADV_INTERVAL_MIN
+	int "Minimum advertising interval (units of 0.625ms)"
+	default 160
+	range 32 16384
+	---help---
+	  Minimum advertising interval.
+	    160 = 100ms (default, responsive discovery)
+
+config BLE_ADV_INTERVAL_MAX
+	int "Maximum advertising interval (units of 0.625ms)"
+	default 320
+	range 32 16384
+	---help---
+	  Maximum advertising interval.
+	    320 = 200ms (default)
+
+# --- Power Management ---
+
+config BLE_TX_POWER_DEFAULT
+	int "Default TX power (dBm)"
+	default 0
+	---help---
+	  Default BLE transmit power in dBm.
+	  Typical range: -20 to +10 dBm (platform dependent).
+
+config BLE_TX_POWER_LOW
+	int "Reduced TX power (dBm)"
+	default -12
+	---help---
+	  Reduced TX power used when RSSI is very strong (device close
+	  to phone).  Saves power when high signal strength is unnecessary.
+
+config BLE_RSSI_POWER_THRESH
+	int "RSSI threshold for power reduction (dBm)"
+	default -40
+	---help---
+	  When measured RSSI exceeds this threshold, the device reduces
+	  TX power to save energy.  Set to a high value (e.g., -20) to
+	  be more aggressive about power savings.
+
+# --- Reconnection ---
+
+config BLE_RECONNECT_MIN_MS
+	int "Minimum reconnect delay (ms)"
+	default 1000
+	range 100 10000
+	---help---
+	  Initial delay before the first reconnection attempt after
+	  a disconnection.
+
+config BLE_RECONNECT_MAX_MS
+	int "Maximum reconnect delay (ms)"
+	default 30000
+	range 1000 120000
+	---help---
+	  Maximum reconnect delay (exponential backoff cap).
+
+# --- Security ---
+
+config BLE_PAIRING_ENABLED
+	bool "Enable BLE pairing"
+	default y
+	---help---
+	  Enable pairing and bonding with the companion phone.
+	  When enabled, the device will request security level L2
+	  (encrypted connection) on each new connection.
+
+config BLE_JUST_WORKS
+	bool "Use Just Works pairing"
+	default y
+	depends on BLE_PAIRING_ENABLED
+	---help---
+	  Use the "Just Works" pairing method (no passkey entry required).
+	  This is less secure than passkey pairing but more convenient.
+	  Disable this to require a 6-digit passkey on the phone.
+
+# --- Sync Protocol ---
+
+config BLE_SYNC_QUEUE_SIZE
+	int "Sync event queue size (must be power of 2)"
+	default 128
+	---help---
+	  Maximum number of events buffered during disconnection.
+	  Must be a power of two.  Events beyond this limit are dropped
+	  (oldest first).
+	    128 = ~100 events + headroom
+	    256 = ~200 events + headroom
+
+config BLE_SYNC_BATCH_MAX
+	int "Maximum events per sync batch"
+	default 10
+	range 1 50
+	---help---
+	  Maximum number of events sent in a single sync batch.
+	  Higher values are more efficient but may cause ATT timeouts.
+
+config BLE_SYNC_TIMEOUT_MS
+	int "Sync ACK timeout (ms)"
+	default 5000
+	range 1000 30000
+	---help---
+	  Time to wait for the phone to acknowledge a sync batch
+	  before retrying.
+
+config BLE_SYNC_MAX_RETRIES
+	int "Maximum sync retries"
+	default 3
+	range 1 10
+	---help---
+	  Maximum number of retries for a sync batch before declaring
+	  the sync session as failed.
+
+# --- Device Status ---
+
+config BLE_STATUS_INTERVAL_MS
+	int "Device status notification interval (ms)"
+	default 10000
+	range 0 60000
+	---help---
+	  Interval between automatic Device Status notifications.
+	  Set to 0 to disable periodic notifications (status will still
+	  be readable on demand).
+
+# --- Task ---
+
+config BLE_TASK_STACKSIZE
+	int "BLE task stack size (bytes)"
+	default 2048
+	---help---
+	  Stack size for the BLE manager task thread.
+
+config BLE_TASK_PRIORITY
+	int "BLE task priority"
+	default 100
+	---help---
+	  Priority of the BLE manager task thread.
+	  Should be lower than sensor sampling tasks but higher than
+	  UI tasks for responsive event delivery.
+
+endif # VELASENSE_BLE

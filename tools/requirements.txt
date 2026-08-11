@@ -1,0 +1,21 @@
+# VelaSense Python Development Tools - Dependencies
+#
+# Install with:  pip install -r requirements.txt
+#
+# Core (required for all tools)
+numpy>=1.24.0
+
+# Model quantization (quantize_model.py)
+torch>=2.0.0
+
+# Sensor data visualization (render_log.py)
+matplotlib>=3.7.0
+
+# Real-time serial plotting (render_log.py --serial)
+pyserial>=3.5
+
+# Signal processing (optional, improves peak detection)
+scipy>=1.10.0
+
+# Test data generation (generate_test_data.py) uses simulate_sensors.py
+# which only requires numpy - no extra deps needed
