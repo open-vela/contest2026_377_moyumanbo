@@ -1,0 +1,150 @@
+#
+# Kconfig — DRV2605L Haptic Motor Driver configuration
+#
+# VelaSense Project
+# SPDX-License-Identifier: MIT
+#
+
+menuconfig DRV2605L
+	bool "DRV2605L Haptic Motor Driver"
+	default y
+	help
+	  Enable the Texas Instruments DRV2605L haptic motor driver.
+	  Supports LRA and ERM motors, waveform sequencing, real-time
+	  playback, and audio-to-haptic conversion over I2C.
+
+if DRV2605L
+
+config DRV2605L_I2C_ADDR
+	hex "I2C slave address (7-bit)"
+	default 0x5A
+	help
+	  7-bit I2C address of the DRV2605L.  Factory default is 0x5A.
+	  The address can be changed by tying the ADR pin; consult the
+	  datasheet for the modified address table.
+
+config DRV2605L_MOTOR_LRA
+	bool "LRA (Linear Resonant Actuator) motor"
+	default y
+	help
+	  Select this if the connected motor is an LRA.  Deselect for
+	  ERM (Eccentric Rotating Mass) motors.  Affects auto-calibration,
+	  feedback control, and resonance detection.
+
+config DRV2605L_MOTOR_ERM
+	bool "ERM (Eccentric Rotating Mass) motor"
+	default n
+	help
+	  Select this if the connected motor is an ERM.  Mutually exclusive
+	  with LRA selection.
+
+config DRV2605L_LIBRARY
+	int "Waveform library (0-7)"
+	default 6
+	range 0 7
+	help
+	  Waveform ROM library to use:
+	    0 — Empty / RAM only
+	    1 — Library A (ERM)
+	    2 — Library B (ERM)
+	    3 — Library C (ERM)
+	    4 — Library D (ERM)
+	    5 — Library E (LRA)
+	    6 — Library 6 (LRA, recommended for LRA motors)
+	    7 — Library F (ERM)
+
+config DRV2605L_RATED_VOLTAGE
+	hex "Rated voltage register value"
+	default 0x53
+	help
+	  Value written to register 0x16 (Rated Voltage).  Controls the
+	  maximum RMS voltage delivered to the motor.  The default 0x53
+	  corresponds to approximately 1.8 Vrms.  Compute from the
+	  datasheet formula:
+	    Rated Voltage = V_rms * 255 / 5.36
+
+config DRV2605L_OD_CLAMP
+	hex "Overdrive clamp voltage register value"
+	default 0x89
+	help
+	  Value written to register 0x17 (Overdrive Clamp).  Limits the
+	  peak voltage during overdrive.  Default 0x89 is approximately
+	  2.8 V peak.  Compute from the datasheet formula:
+	    OD Clamp = V_peak * 255 / 5.6
+
+config DRV2605L_AUTO_CALIBRATE
+	bool "Run LRA auto-calibration on init"
+	default y
+	help
+	  When enabled the driver runs the DRV2605L's built-in
+	  auto-calibration routine during initialisation.  This measures
+	  the motor's actual impedance and resonance frequency and stores
+	  the results in the feedback and compensation registers.  Strongly
+	  recommended for LRA motors.
+
+config DRV2605L_BEMF_GAIN
+	int "Back-EMF gain (0-7)"
+	default 3
+	range 0 7
+	help
+	  BEMF gain setting for the feedback control register (0x1A).
+	  Higher values increase sensitivity to motor back-EMF.
+	    0 — 0.25x
+	    1 — 0.50x
+	    2 — 1.00x
+	    3 — 2.00x (default for most LRA motors)
+	    4 — 4.00x
+	    5 — 8.00x
+	    6 — 16.0x
+	    7 — 32.0x
+
+config DRV2605L_CTRL2_SAMPLE_TIME
+	int "Sample time (Control 2 bits [5:4])"
+	default 3
+	range 0 3
+	help
+	  Sample time for back-EMF sensing in the Control 2 register.
+	    0 — 150 us
+	    1 — 200 us
+	    2 — 250 us
+	    3 — 300 us (default)
+
+config DRV2605L_CTRL2_BLANKING_TIME
+	int "Blanking time (Control 2 bits [3:2])"
+	default 0
+	range 0 3
+	help
+	  Blanking time before back-EMF measurement.
+	    0 — 45 us (default)
+	    1 — 75 us
+	    2 — 150 us
+	    3 — 225 us
+
+config DRV2605L_CTRL2_IDISS_TIME
+	int "Current dissipation time (Control 2 bits [1:0])"
+	default 0
+	range 0 3
+	help
+	  Current dissipation time after drive pulse.
+	    0 — 45 us (default)
+	    1 — 75 us
+	    2 — 150 us
+	    3 — 225 us
+
+config DRV2605L_TIMEOUT_MS
+	int "Playback timeout (ms)"
+	default 5000
+	range 100 30000
+	help
+	  Maximum time in milliseconds to wait for a single playback to
+	  complete.  If the Go bit has not cleared within this period the
+	  driver reports a timeout error.
+
+config DRV2605L_DEBUG
+	bool "Enable debug logging"
+	default n
+	help
+	  Print register reads/writes and state transitions to the debug
+	  log.  Adds ~400 bytes to code size.
+
+endif # DRV2605L

@@ -1,0 +1,140 @@
+# MAX17048 Battery Fuel Gauge Driver Configuration
+#
+# Copyright (c) 2026 VelaSense Project
+# SPDX-License-Identifier: MIT
+
+menuconfig MAX17048
+	bool "MAX17048 battery fuel gauge"
+	default y
+	help
+	  Enable the Maxim / Analog Devices MAX17048 Li-ion battery fuel
+	  gauge driver.  The MAX17048 communicates over I2C and provides
+	  voltage-based state-of-charge estimation without a sense resistor.
+
+	  Supported features:
+	    - Battery voltage measurement (12-bit ADC)
+	    - State of charge estimation (1/256 % resolution)
+	    - Charge / discharge rate monitoring
+	    - Programmable low-battery alert with callback
+	    - Quick-start SOC recalibration
+	    - Hibernate and sleep power-saving modes
+
+if MAX17048
+
+config MAX17048_I2C_BUS
+	string "I2C bus device name"
+	default "I2C0"
+	help
+	  Name of the I2C bus device the MAX17048 is connected to
+	  (e.g. "I2C0", "i2c-1").
+
+config MAX17048_I2C_ADDRESS
+	hex "I2C slave address (7-bit)"
+	default 0x36
+	help
+	  7-bit I2C slave address of the MAX17048.  The factory default
+	  is 0x36.  Change this only if the address pin is externally
+	  modified (the MAX17048 has a fixed address -- this option exists
+	  for board-level verification).
+
+config MAX17048_ALERT_THRESHOLD
+	int "Low battery alert threshold (percent)"
+	default 20
+	range 0 31
+	help
+	  SOC percentage at which the MAX17048 asserts the ALERT output.
+	  VelaSense default is 20 % (single Li-ion cell).
+	  Set to 0 to disable the SOC-low alert.
+
+config MAX17048_CRIT_THRESHOLD
+	int "Critical battery threshold (percent)"
+	default 5
+	range 0 100
+	help
+	  SOC percentage at which the application should initiate a
+	  controlled shutdown.  VelaSense default is 5 %.
+
+config MAX17048_VOLTAGE_LOW_MV
+	int "Low voltage alert threshold (mV)"
+	default 3300
+	range 0 5100
+	help
+	  Lower voltage alert threshold in millivolts.  The MAX17048
+	  asserts an alert when VCELL drops below this value.
+	  VelaSense default: 3300 mV (approx. 20 % SOC for Li-ion).
+
+config MAX17048_VOLTAGE_HIGH_MV
+	int "High voltage alert threshold (mV)"
+	default 0
+	range 0 5100
+	help
+	  Upper voltage alert threshold in millivolts.  Set to 0 to
+	  disable the upper voltage alert.  VelaSense default: 0
+	  (disabled -- charging circuitry handles overvoltage).
+
+config MAX17048_RESET_VOLTAGE_MV
+	int "Reset voltage threshold (mV)"
+	default 3100
+	range 0 5080
+	help
+	  Voltage threshold for the fuel gauge reset comparator.
+	  Below this voltage the MAX17048 asserts a voltage-reset alert.
+	  VelaSense default: 3100 mV (approx. 5 % SOC).
+	  Values are quantised to 40 mV steps.
+
+config MAX17048_READ_INTERVAL_S
+	int "Battery read interval (seconds)"
+	default 60
+	range 5 3600
+	help
+	  How often the application reads battery telemetry (SOC, voltage,
+	  rate).  VelaSense default: 60 seconds.
+	  Lower values increase bus traffic; higher values reduce
+	  resolution of charge-rate estimation.
+
+config MAX17048_DEFAULT_RCOMP
+	hex "Default RCOMP compensation value"
+	default 0x97
+	range 0x00 0xFF
+	help
+	  Default value for the RCOMP field in the CONFIG register.
+	  RCOMP adjusts the fuel gauge model for temperature.
+	  The datasheet default is 0x97 at 20 degC.
+
+config MAX17048_ENABLE_HIBERNATE
+	bool "Enable hibernate mode support"
+	default y
+	help
+	  Compile in hibernate mode entry / exit functions.  Hibernate
+	  mode reduces the fuel gauge's power consumption to ~2 uA
+	  when the battery is idle.
+
+config MAX17048_HIBRT_THRESHOLD
+	int "Hibernate activity threshold (0-255)"
+	default 0
+	range 0 255
+	depends on MAX17048_ENABLE_HIBERNATE
+	help
+	  Activity threshold for hibernate entry.  The fuel gauge
+	  enters hibernate when the absolute CRATE value stays below
+	  this threshold.  0 = use device default.
+
+config MAX17048_ACTRT_THRESHOLD
+	int "Activity exit threshold (0-255)"
+	default 0
+	range 0 255
+	depends on MAX17048_ENABLE_HIBERNATE
+	help
+	  Activity threshold for hibernate exit.  The fuel gauge
+	  exits hibernate when the absolute CRATE value exceeds
+	  this threshold.  0 = use device default.
+
+config MAX17048_ENABLE_QUICKSTART
+	bool "Enable quick-start recalibration"
+	default y
+	help
+	  Compile in the quick-start function, which triggers an
+	  open-circuit voltage measurement and recalculates SOC.
+	  Useful after battery replacement or known SOC drift.
+
+endif # MAX17048

@@ -1,0 +1,118 @@
+#
+# ICM-42688-P Six-Axis IMU Kconfig
+#
+
+config SENSORS_ICM42688
+	bool "ICM-42688-P 6-axis IMU (accel + gyro)"
+	default y if VELASENSE
+	depends on SPI
+	---help---
+		Enable the ICM-42688-P six-axis inertial measurement unit driver.
+		The ICM-42688-P is a TDK InvenSense 3-axis accelerometer + 3-axis
+		gyroscope with SPI interface, 2KB FIFO, and data-ready interrupt.
+		Used for motion sensing and PPG motion artifact removal.
+
+if SENSORS_ICM42688
+
+config ICM42688_SPI_BUS
+	int "SPI bus number"
+	default 1
+	---help---
+		SPI bus number for the ICM-42688-P (e.g., 1 for /dev/spi1).
+		On the VelaSense board, the IMU shares SPI1 with the PPG
+		and EDA sensors, each with a separate chip-select.
+
+config ICM42688_CS_INDEX
+	int "Chip-select index"
+	default 1
+	---help---
+		Chip-select index on the SPI bus for the ICM-42688-P.
+		0 = CS0 (PPG/MAX86141), 1 = CS1 (IMU), 2 = CS2 (EDA/AD5940).
+
+config ICM42688_IRQ_PIN
+	int "Interrupt GPIO pin"
+	default -1
+	---help---
+		GPIO pin number for the ICM-42688-P INT1 data-ready interrupt.
+		Set to -1 for polling mode (no hardware interrupt).
+		On the VelaSense board, connect INT1 to a free GPIO.
+
+config ICM42688_ACCEL_FSR
+	int "Accelerometer full-scale range"
+	default 1
+	range 0 3
+	---help---
+		Accelerometer full-scale range:
+		  0 = +/-16g
+		  1 = +/-8g  (VelaSense default)
+		  2 = +/-4g
+		  3 = +/-2g
+
+config ICM42688_GYRO_FSR
+	int "Gyroscope full-scale range"
+	default 0
+	range 0 7
+	---help---
+		Gyroscope full-scale range:
+		  0 = +/-2000 dps (VelaSense default)
+		  1 = +/-1000 dps
+		  2 = +/-500 dps
+		  3 = +/-250 dps
+		  4 = +/-125 dps
+		  5 = +/-62.5 dps
+		  6 = +/-31.25 dps
+		  7 = +/-15.625 dps
+
+config ICM42688_ACCEL_ODR
+	int "Accelerometer output data rate (Hz)"
+	default 100
+	range 12 32000
+	---help---
+		Accelerometer output data rate in Hz.
+		Supported rates: 12, 25, 50, 100, 200, 500, 1000, 2000,
+		4000, 8000, 16000, 32000.
+		Default is 100 Hz for VelaSense.
+
+config ICM42688_GYRO_ODR
+	int "Gyroscope output data rate (Hz)"
+	default 100
+	range 12 32000
+	---help---
+		Gyroscope output data rate in Hz.
+		Supported rates: 12, 25, 50, 100, 200, 500, 1000, 2000,
+		4000, 8000, 16000, 32000.
+		Default is 100 Hz for VelaSense.
+
+config ICM42688_USE_FIFO
+	bool "Use hardware FIFO"
+	default y
+	---help---
+		Enable the ICM-42688-P hardware FIFO for batch reading.
+		The FIFO accumulates samples and triggers a watermark
+		interrupt, reducing SPI bus overhead. Recommended for
+		100 Hz operation. Disable only for debugging.
+
+config ICM42688_FIFO_WATERMARK
+	int "FIFO watermark level (packets)"
+	default 16
+	range 1 128
+	depends on ICM42688_USE_FIFO
+	---help---
+		FIFO watermark level in packets. When the FIFO contains
+		this many packets, the watermark interrupt fires.
+		Each packet is 16 bytes (accel + gyro + timestamp).
+		At 100 Hz ODR, watermark=16 means 160ms between reads.
+		Lower values reduce latency, higher values reduce SPI overhead.
+
+config ICM42688_FIFO_MODE
+	int "FIFO mode"
+	default 1
+	range 0 2
+	depends on ICM42688_USE_FIFO
+	---help---
+		FIFO operating mode:
+		  0 = Bypass (disabled)
+		  1 = Stream mode (old data overwritten when full)
+		  2 = Stop-on-full (recording stops when FIFO is full)
+
+endif # SENSORS_ICM42688

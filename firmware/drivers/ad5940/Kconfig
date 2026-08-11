@@ -1,0 +1,153 @@
+#
+# AD5940 Electrodermal Activity (EDA) Analog Frontend Kconfig
+#
+
+config SENSORS_AD5940
+	bool "AD5940 EDA/impedance analog frontend"
+	default y if VELASENSE
+	depends on SPI
+	---help---
+		Enable the AD5940 electrodermal activity (EDA) analog frontend
+		driver. The AD5940 is a high-precision bioimpedance measurement
+		frontend from Analog Devices, configured here for galvanic skin
+		response (GSR/EDA) measurement.
+
+		Features:
+		  - 16-bit ADC with programmable gain
+		  - DC excitation for skin conductance measurement
+		  - Hardware low-pass filter for motion artifact rejection
+		  - Skin conductance response (SCR) event detection
+		  - Low-power hibernate mode (<5 uA)
+
+if SENSORS_AD5940
+
+config AD5940_SPI_BUS
+	int "SPI bus number"
+	default 2
+	---help---
+		SPI bus number for the AD5940 (e.g., 2 for /dev/spi2).
+
+config AD5940_SPI_FREQ
+	int "SPI clock frequency (Hz)"
+	default 16000000
+	range 1000000 16000000
+	---help---
+		SPI clock frequency in Hz. Maximum is 16 MHz.
+		Higher frequencies improve data throughput but may cause
+		signal integrity issues on long PCB traces.
+
+config AD5940_CS_PIN
+	int "Chip select GPIO pin (-1 for HW CS)"
+	default -1
+	---help---
+		GPIO pin number for SPI chip select. Use -1 to use the
+		hardware chip select provided by the SPI controller.
+
+config AD5940_IRQ_PIN
+	int "Data-ready interrupt GPIO pin (-1 for polling)"
+	default -1
+	---help---
+		GPIO pin for the AD5940 interrupt output. Use -1 for
+		polling mode (reads triggered by timer). Interrupt mode
+		reduces CPU usage and improves timing accuracy.
+
+config AD5940_RESET_PIN
+	int "Hardware reset GPIO pin (-1 for SW reset only)"
+	default -1
+	---help---
+		GPIO pin for the AD5940 hardware reset line. Use -1 to
+		rely on software reset only. Hardware reset is more
+		reliable for initial power-on sequencing.
+
+config AD5940_SAMPLE_RATE
+	int "EDA sample rate (Hz)"
+	default 32
+	range 1 200
+	---help---
+		Skin conductance sampling rate in Hz. Default 32 Hz provides
+		good temporal resolution for SCR event detection while keeping
+		data rate manageable. Range: 1-200 Hz.
+
+config AD5940_EDA_EXCIT_MV
+	int "DC excitation voltage (mV)"
+	default 100
+	range 10 500
+	---help---
+		DC excitation voltage applied across skin electrodes in
+		millivolts. Default 100 mV balances signal quality (SNR)
+		against electrode polarization. Higher values may cause
+		skin irritation; lower values reduce SNR.
+
+config AD5940_TIA_GAIN
+	int "TIA gain setting (see datasheet)"
+	default 10
+	range 0 25
+	---help---
+		Transimpedance amplifier gain register value. See the
+		AD5940 datasheet Table 25 for the mapping between register
+		value and gain in ohms:
+		  0=200, 1=1k, 2=2k, 3=3k, 4=4k, 5=6k, 6=8k, 7=10k,
+		  8=12k, 9=16k, 10=20k, 11=24k, 12=30k, 13=32k, 14=40k,
+		  15=48k, 16=64k, 17=85k, 18=96k, 19=100k, 20=120k,
+		  21=128k, 22=160k, 23=196k, 24=256k, 25=512k
+
+		Default 10 = 20 kohm, suitable for typical GSR range.
+
+config AD5940_FILTER_CUTOFF
+	int "Low-pass filter cutoff frequency (Hz x10)"
+	default 150
+	range 10 2000
+	---help---
+		Analog/digital low-pass filter cutoff frequency in 0.1 Hz
+		units. Default 150 = 15.0 Hz. This filter removes motion
+		artifacts while preserving SCR signals (typical bandwidth
+		0.05 - 5 Hz).
+
+config AD5940_SCR_THRESHOLD
+	int "SCR detection threshold (uS x1000)"
+	default 50
+	range 10 500
+	---help---
+		Minimum skin conductance increase (in 0.001 uS units) to
+		trigger an SCR event. Default 50 = 0.050 uS. Lower values
+		detect more events but increase false positives. Higher
+		values may miss subtle responses.
+
+config AD5940_SCR_ALPHA
+	int "Baseline EMA alpha (x1000)"
+	default 10
+	range 1 100
+	---help---
+		Exponential moving average alpha for baseline tracking
+		(x1000). Default 10 = 0.010. Lower values give slower
+		baseline adaptation (more stable). Higher values adapt
+		faster to tonic changes.
+
+config AD5940_UORB_ENABLE
+	bool "Enable uORB publishing"
+	default y
+	---help---
+		Publish EDA data to the uORB sensor_impd topic at the
+		configured sample rate. Disable to use the driver in
+		polling mode only (manual ad5940_read_eda calls).
+
+config AD5940_UORB_STACK_SIZE
+	int "uORB task stack size (bytes)"
+	default 4096
+	---help---
+		Stack size for the background EDA measurement task.
+		Default 4096 bytes is sufficient for the driver logic
+		and syslog calls.
+
+config AD5940_LOG_LEVEL
+	int "Driver log level (0=off, 7=max)"
+	default 5
+	range 0 7
+	---help---
+		Syslog verbosity level for the AD5940 driver:
+		  0 = no logging
+		  3 = errors only (LOG_ERR)
+		  5 = info level (LOG_INFO) -- default
+		  7 = debug (LOG_DEBUG) -- very verbose
+
+endif # SENSORS_AD5940

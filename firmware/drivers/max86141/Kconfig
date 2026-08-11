@@ -1,0 +1,176 @@
+# MAX86141 PPG sensor driver configuration
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+# Copyright (C) 2026 VelaSense Project
+
+config MAX86141
+	bool "MAX86141 PPG sensor driver"
+	default n
+	depends on SPI
+	depends on GPIO
+	---help---
+	  Enable the MAX86141 three-wavelength PPG sensor driver.
+	  The MAX86141 is a Maxim/Analog Devices optical pulse oximetry
+	  and heart-rate sensor AFE with SPI interface.
+
+	  The driver publishes PPG data to the uORB "sensor_ppgd" topic
+	  at the configured sample rate.
+
+if MAX86141
+
+config MAX86141_SPI_BUS
+	int "SPI bus number"
+	default 1
+	---help---
+	  SPI bus number to which the MAX86141 is connected.
+	  The MAX86141 uses 4-wire SPI at up to 10 MHz.
+
+config MAX86141_SPI_CS
+	int "SPI chip-select index"
+	default 0
+	---help---
+	  Chip-select index for the MAX86141 on the SPI bus.
+
+config MAX86141_SPI_FREQ
+	int "SPI clock frequency (Hz)"
+	default 8000000
+	range 1000000 10000000
+	---help---
+	  SPI clock frequency in Hz.  The MAX86141 supports up to 10 MHz.
+	  Default is 8 MHz for reliable operation.
+
+config MAX86141_IRQ_PIN
+	int "GPIO pin for FIFO watermark interrupt"
+	default 23
+	---help---
+	  GPIO pin number connected to the MAX86141 INT output.
+	  The interrupt fires when the FIFO watermark is reached.
+	  The pin should be configured as input with pull-up.
+
+config MAX86141_IRQ_ACTIVE_LOW
+	bool "Interrupt is active-low"
+	default y
+	---help---
+	  The MAX86141 INT output is active-low (open-drain).
+	  Select this if the interrupt line is active-low.
+
+config MAX86141_SAMPLE_RATE
+	int "PPG sample rate (Hz)"
+	default 100
+	range 1 1000
+	---help---
+	  PPG sample rate in Hz.  For wrist-based heart-rate monitoring,
+	  100 Hz is a good default.  For pulse oximetry (SpO2), 200 Hz
+	  or higher is recommended.
+
+	  Valid values: 1, 10, 25, 50, 100, 200, 300, 400, 500, 600,
+	  800, 1000.
+
+config MAX86141_FIFO_WATERMARK
+	int "FIFO watermark level (samples)"
+	default 15
+	range 1 31
+	---help---
+	  FIFO watermark (interrupt threshold) in samples.
+	  The interrupt fires when this many samples are available.
+	  Setting to half the FIFO depth (15-16) provides a good
+	  balance between latency and efficiency.
+
+config MAX86141_FIFO_ROLLOVER
+	bool "Enable FIFO rollover on overflow"
+	default n
+	---help---
+	  When enabled, new samples overwrite old ones when the FIFO
+	  is full.  When disabled (default), new samples are dropped
+	  when the FIFO is full.
+
+config MAX86141_PULSE_WIDTH
+	int "LED pulse width (0=50us, 1=100us, 2=200us, 3=400us)"
+	default 2
+	range 0 3
+	---help---
+	  LED pulse width / ADC integration time.
+	  Longer pulse width gives more ADC resolution but slower
+	  maximum sample rate.
+	    0: 50 us  (15-bit effective)
+	    1: 100 us (16-bit effective)
+	    2: 200 us (17-bit effective) [default]
+	    3: 400 us (18-bit effective)
+
+config MAX86141_SAMPLE_AVERAGE
+	int "Sample averaging factor (0=none, 1=2x, 2=4x, 3=8x, 4=16x, 5=32x)"
+	default 2
+	range 0 5
+	---help---
+	  Number of ADC samples averaged before pushing to FIFO.
+	  More averaging reduces noise but increases effective sample
+	  period.
+	    0: No averaging
+	    1: 2 samples
+	    2: 4 samples [default]
+	    3: 8 samples
+	    4: 16 samples
+	    5: 32 samples
+
+config MAX86141_ADC_RANGE
+	int "ADC range (0=4096, 1=8192, 2=16384, 3=32768)"
+	default 2
+	range 0 3
+	---help---
+	  ADC measurement range in nA.
+	    0: +/- 4096 nA  (best for low-perfusion)
+	    1: +/- 8192 nA
+	    2: +/- 16384 nA [default]
+	    3: +/- 32768 nA (max dynamic range)
+
+config MAX86141_LED_GREEN_MA
+	int "Green LED current (mA)"
+	default 20
+	range 0 204
+	---help---
+	  Initial green LED current in milliamps.
+	  Green is the primary wavelength for wrist PPG.
+	  Typical range: 10 - 40 mA.
+
+config MAX86141_LED_RED_MA
+	int "Red LED current (mA)"
+	default 15
+	range 0 204
+	---help---
+	  Initial red LED current in milliamps.
+	  Red is used for SpO2 measurement.
+	  Typical range: 10 - 40 mA.
+
+config MAX86141_LED_IR_MA
+	int "IR LED current (mA)"
+	default 15
+	range 0 204
+	---help---
+	  Initial IR LED current in milliamps.
+	  IR is used for SpO2 measurement.
+	  Typical range: 10 - 40 mA.
+
+config MAX86141_UORB
+	bool "Enable uORB integration"
+	default y
+	depends on MAX86141
+	---help---
+	  Enable automatic uORB publication of sensor_ppgd data.
+	  When enabled, the driver creates a worker thread that:
+	    1. Blocks on the FIFO watermark GPIO interrupt
+	    2. Reads the FIFO
+	    3. Computes SQI
+	    4. Publishes to uORB sensor_ppgd topic at the configured
+	       sample rate
+
+config MAX86141_UORB_START
+	bool "Auto-start uORB worker on boot"
+	default y
+	depends on MAX86141_UORB
+	---help---
+	  Automatically start the MAX86141 uORB worker thread at boot.
+	  If disabled, the driver must be started manually via
+	  max86141_uorb_start().
+
+endif # MAX86141
