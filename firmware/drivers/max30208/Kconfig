@@ -1,0 +1,55 @@
+#
+# MAX30208 Digital Temperature Sensor Kconfig
+#
+
+config SENSORS_MAX30208
+	bool "MAX30208 skin temperature sensor"
+	default y if VELASENSE
+	depends on I2C
+	---help---
+		Enable the MAX30208 precision digital temperature sensor driver.
+		The MAX30208 is a high-accuracy (±0.1°C) I2C temperature sensor
+		designed for wearable skin temperature measurement.
+
+if SENSORS_MAX30208
+
+config MAX30208_I2C_BUS
+	int "I2C bus number"
+	default 1
+	---help---
+		I2C bus number for the MAX30208 sensor (e.g., 1 for /dev/i2c1).
+
+config MAX30208_I2C_ADDR
+	hex "I2C address (7-bit)"
+	default 0x50
+	---help---
+		I2C slave address of the MAX30208. Default is 0x50.
+
+config MAX30208_POLL_RATE
+	int "Polling rate (Hz)"
+	default 1
+	range 1 10
+	---help---
+		Temperature reading rate in Hz. Default is 1 Hz.
+
+config MAX30208_ALARM_ENABLE
+	bool "Enable temperature alarms"
+	default n
+	---help---
+		Enable high/low temperature alarm thresholds.
+
+config MAX30208_ALARM_HIGH
+	int "High alarm threshold (°C x10)"
+	default 380
+	---help---
+		High temperature alarm threshold in 0.1°C units.
+		Default 380 = 38.0°C.
+
+config MAX30208_ALARM_LOW
+	int "Low alarm threshold (°C x10)"
+	default 320
+	---help---
+		Low temperature alarm threshold in 0.1°C units.
+		Default 320 = 32.0°C.
+
+endif # SENSORS_MAX30208
