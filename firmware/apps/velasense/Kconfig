@@ -1,0 +1,105 @@
+#
+# VelaSense Application Kconfig
+#
+
+config VELASENSE
+	bool "VelaSense emotion detection application"
+	default n
+	---help---
+		Enable the VelaSense wrist-worn emotion arousal detection
+		application. This includes sensor sampling, DSP, TinyML
+		inference, LVGL UI, and BLE synchronization.
+
+if VELASENSE
+
+config VELASENSE_PPG_SENSOR
+	bool "Enable PPG sensor (MAX86141)"
+	default y
+	---help---
+		Enable the MAX86141 three-wavelength PPG sensor driver.
+
+config VELASENSE_IMU_SENSOR
+	bool "Enable IMU sensor (ICM-42688-P)"
+	default y
+	---help---
+		Enable the ICM-42688-P six-axis IMU driver.
+
+config VELASENSE_EDA_SENSOR
+	bool "Enable EDA sensor (AD5940)"
+	default y
+	---help---
+		Enable the AD5940 electrodermal activity sensor driver.
+		If unavailable, the system degrades to PPG+IMU only.
+
+config VELASENSE_TEMP_SENSOR
+	bool "Enable skin temperature sensor (MAX30208)"
+	default y
+	---help---
+		Enable the MAX30208 skin temperature sensor driver.
+
+config VELASENSE_HAPTIC_DRIVER
+	bool "Enable haptic motor driver (DRV2605L)"
+	default y
+	---help---
+		Enable the DRV2605L haptic motor driver for event alerts.
+
+config VELASENSE_FUEL_GAUGE
+	bool "Enable fuel gauge (MAX17048)"
+	default y
+	---help---
+		Enable the MAX17048 battery fuel gauge driver.
+
+config VELASENSE_PPG_SAMPLE_RATE
+	int "PPG sample rate (Hz)"
+	default 100
+	range 25 400
+
+config VELASENSE_IMU_SAMPLE_RATE
+	int "IMU sample rate (Hz)"
+	default 100
+	range 25 400
+
+config VELASENSE_EDA_SAMPLE_RATE
+	int "EDA sample rate (Hz)"
+	default 32
+	range 1 100
+
+config VELASENSE_TEMP_SAMPLE_RATE
+	int "Temperature sample rate (Hz)"
+	default 1
+	range 1 10
+
+config VELASENSE_INFERENCE_WINDOW
+	int "Inference window size (seconds)"
+	default 60
+	range 10 120
+
+config VELASENSE_INFERENCE_INTERVAL
+	int "Inference interval (seconds)"
+	default 5
+	range 1 30
+
+config VELASENSE_SQI_THRESHOLD
+	int "Signal quality threshold (x100)"
+	default 70
+	range 0 100
+	---help---
+		PPG Signal Quality Index threshold (0.0-1.0, stored as x100).
+		Below this threshold, no emotion conclusion is output.
+
+config VELASENSE_CONFIDENCE_THRESHOLD
+	int "Confidence threshold (x100)"
+	default 82
+	range 0 100
+	---help---
+		Confidence threshold for event trigger (0.0-1.0, stored as x100).
+		Must be exceeded for 15 continuous seconds.
+
+config VELASENSE_EVENT_COOLDOWN
+	int "Event cooldown (seconds)"
+	default 300
+	range 60 3600
+	---help---
+		Minimum time between same-type events.
+
+endif # VELASENSE

@@ -1,0 +1,40 @@
+# Build output
+cmake_out/
+build_out/
+*.o
+*.a
+*.elf
+*.bin
+*.hex
+*.map
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+*.egg-info/
+
+# Environment (NEVER commit secrets)
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test output
+test_output/
+*.log
+
+# Data (keep only samples/)
+data/raw/
+data/processed/

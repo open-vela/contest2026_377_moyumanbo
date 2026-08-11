@@ -1,0 +1,40 @@
+#
+# VelaSense Board Kconfig
+#
+
+if ARCH_BOARD_VELENSE_BOARD
+
+config VELASENSE_BOARD
+	bool
+	default y
+
+comment "VelaSense Board Options"
+
+config VELASENSE_LCD_ENABLE
+	bool "Enable LCD display"
+	default y
+	depends on SIFLI_LCD
+	---help---
+		Enable the CO5300 AMOLED display for the VelaSense wrist UI.
+
+config VELASENSE_TOUCH_ENABLE
+	bool "Enable touch input"
+	default y
+	depends on INPUT_FT6146
+	---help---
+		Enable the FT6146 capacitive touch controller.
+
+config VELASENSE_BLE_ENABLE
+	bool "Enable Bluetooth"
+	default y
+	depends on BT
+	---help---
+		Enable BLE for event synchronization with phone.
+
+config VELASENSE_HAPTIC_ENABLE
+	bool "Enable haptic vibration"
+	default y
+	---help---
+		Enable the DRV2605L haptic driver for event alerts.
+
+endif
