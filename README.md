@@ -66,7 +66,7 @@ git -C vendor/sifli apply \
   ../../contest2026_377_moyumanbo/board/velasense/patches/vendor-sifli-co5300-demo.patch
 ~~~
 
-已应用补丁、或已经包含对应 BSP 提交的工作区不要重复应用。补丁对应的独立 BSP 提交为 `3de4b2cd50ef85069e26e7a63c17a2fa780296d2`；官方公共仓的合入需要维护者 review，详见 [提交说明](docs/demo/submission.md)。
+已应用补丁、或已经包含对应 BSP 提交的工作区不要重复应用。补丁对应的独立 BSP 提交为 `c403c6787ccba21ab3c8505f65e13faa851bed5a`；官方公共仓的合入需要维护者 review，详见 [提交说明](docs/demo/submission.md)。
 
 验证所用 openvela 依赖版本记录于 [workspace-revisions.json](docs/demo/workspace-revisions.json)。特别注意 LVGL 是 manifest 中的独立仓库 `apps/graphics/lvgl/lvgl`，使用 openvela 的 `0f2a49f588505a00e8b46e25a34581c87291a62a`（9.1.0）；不要用原生 LVGL ZIP 代替该适配仓库。
 

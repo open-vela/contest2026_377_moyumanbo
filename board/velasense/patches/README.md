@@ -2,7 +2,7 @@
 
 `vendor-sifli-co5300-demo.patch` 是相对公共仓基线的完整补丁，不是相对某次未提交工作区的增量。
 基线：open-vela/vendor_sifli @ af6f365eaa04a674af0467aa1a803bc4c77691ba。
-提交：INKT-love/vendor_sifli @ 3de4b2cd50ef85069e26e7a63c17a2fa780296d2。
+提交：INKT-love/vendor_sifli @ c403c6787ccba21ab3c8505f65e13faa851bed5a。
 
 包含当前演示实际使用的 CO5300 初始化、传输同步、显示/触摸引脚、电源和 HAL 配置改动。
 保留四字节 QSPI 命令、启用正常颜色模式；屏幕实际显示及中文检查已通过。
