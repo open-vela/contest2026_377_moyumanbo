@@ -1,148 +1,126 @@
-# contest2026_377_moyumanbo
+# VelaSense · 腕式情绪关怀终端
 
-👋 欢迎参加 **2026 首届 openvela AI 硬件开发者大赛**！
+队伍：moyumanbo（377） · 方向：AI 硬件产品创新。
 
-这是组委会为你的队伍创建的**专属参赛仓库**（本仓为样例/模板，队伍编号 `377`；你看到的将是你自己的 `contest2026_<编号>_<队伍名>`）。比赛期间，你的全部参赛代码、打包产物与 AI Coding 日志都提交到这里。
+VelaSense 的目标是以腕式生理信号和交互界面辅助情绪觉察。本次提交交付的是 **SF32LB52-DevKit-LCD 上可显示、可演示的 UI 原型**：开机直接进入界面，包含首页、趋势、呼吸练习、设置和心情弹窗。
 
-> 本仓既是「代码仓」，又内置了一键拉取整套 openvela 工程的 `repo` 清单（manifest）。你只需跟它打交道，**自始至终只动一个文件夹**。
+**当前所有心率、HRV、平静指数、时间、电量和趋势均为样例数据。** 本版本不进行真实情绪识别，不接入传感器、云端大模型或蓝牙；不作医疗或心理诊断。仓内早期完整功能代码保留在 `firmware/`，未集成到本次演示固件，也不代表已经完成实机验证。
 
----
+![LVGL 主机渲染的演示界面](docs/demo/overview.png)
 
-## 一、先读这些官方文档
+上图由相同 UI 源码在主机端渲染，不是实物照片。实机测试记录与限制见 [验证记录](docs/demo/validation.md)。
 
-**通用（所有赛道必读）：**
+## 已完成与未完成
 
-| 文档                                                                                                                                     | 用途                                           |
-| ---------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
-| [《大赛总览》](https://github.com/open-vela/docs/blob/dev-ai-contest-2026/zh-cn/contest_2026/contest_overview.md)                        | 赛道、流程、评分、资源，建议先通读             |
-| [《参赛代码提交指南》](https://github.com/open-vela/docs/blob/dev-ai-contest-2026/zh-cn/contest_2026/code_submission_guide.md)           | 仓库获取、提交流程、时间与权限（**以此为准**） |
-| [《AI Coding 日志归集与提交手册》](https://github.com/open-vela/docs/blob/dev-ai-contest-2026/zh-cn/contest_2026/ai_coding_log_guide.md) | 如何导出 AI 对话日志并提交到 `logs/`           |
+| 内容 | 本次状态 |
+| --- | --- |
+| CO5300 390×450 显示、正常配色、中文字体 | 已在实机点亮并确认显示；启动字形检查 0 个缺字 |
+| 四个页面、心情弹窗、自动轮播 | 已实现；主机交互检查通过 |
+| 呼吸练习 | 4 秒吸气、4 秒停留、6 秒呼气的演示动画；可开始/暂停 |
+| 呼吸待机界面 | 保留 Ready? 与下方阶段说明，移除重复的 4:4:6 |
+| FT6146 触摸 | 实机设备初始化成功；触摸定位和边缘操作仍需全面验证 |
+| 传感器、算法、TinyML、蓝牙、云服务 | 早期代码/设计，不在本次演示中启用 |
+| 持久化、功耗、睡眠唤醒、量产可靠性 | 未验收 |
 
-**按你的赛道选读（三选一）：**
+## 目录
 
-| 赛道                  | 教程导航                                                                                                                                                 |
-| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 快应用 / 手表应用创新 | [快应用教程导航](https://github.com/open-vela/docs/blob/dev-ai-contest-2026/zh-cn/contest_2026/quickapp/quickapp_guide_index.md)                         |
-| AI 硬件产品创新       | [AI 硬件赛道教程导航](https://github.com/open-vela/docs/blob/dev-ai-contest-2026/zh-cn/contest_2026/ai_hardware/ai_hardware_guide_index.md)              |
-| 新硬件适配            | [新硬件适配赛道教程导航](https://github.com/open-vela/docs/blob/dev-ai-contest-2026/zh-cn/contest_2026/hardware_porting/hardware_porting_guide_index.md) |
+- `app/velasense_demo/`：本次启动运行的 LVGL 演示程序与中文字体。
+- `board/velasense/configs/ui_demo/`：显示演示固件配置。
+- `board/velasense/patches/`：基于公共 BSP 确切版本的完整依赖补丁。
+- `tools/build_ui_demo.py`：ARM 固件构建入口。
+- `tools/ui_preview/`：使用相同 LVGL/UI 源码的主机预览与交互检查。
+- `docs/demo/`：预览、验证记录、依赖版本和提交说明。
+- `firmware/`、`docs/specs/`：早期完整产品实现和设计，当前未集成/未验收。
+- `logs/INKT-love/`：AI Coding 日志及归集说明。
 
----
+## 获取与构建
 
-## 二、第一步：拉取完整工程
+需要 Linux 或 WSL2、Python 3、CMake、Git，以及按官方教程同步的 openvela 工作区。ARM GCC 和 Ninja 使用工作区的 `prebuilts/`。Kconfig 使用 `kconfiglib`（例如 `python3 -m pip install --user kconfiglib`，受系统 Python 策略限制时使用虚拟环境）。
 
-用组委会提供的命令一键拉取「openvela 全量源码 + 你的专属仓」：
-
-```bash
+~~~sh
+mkdir VelaSense && cd VelaSense
 repo init -u https://github.com/open-vela/contest2026_377_moyumanbo \
   -b dev-ai-contest-2026 -m contest2026_377_moyumanbo.xml
 repo sync -c -j8
-```
+~~~
 
-同步后，你的整个仓库位于工作区的 `contest2026_377_moyumanbo/`，openvela 全量源码在外层（`nuttx/`、`apps/`、`packages/`、`vendor/` 等）。
+团队 PR 合入前，在新工作区中获取本次提交分支：
 
----
+~~~sh
+git -C contest2026_377_moyumanbo fetch \
+  https://github.com/INKT-love/contest2026_377_moyumanbo feature/velasense-submit
+git -C contest2026_377_moyumanbo switch --detach FETCH_HEAD
+~~~
 
-## 三、第二步：在哪里写代码
+### 屏幕驱动依赖
 
-**只在自己的仓目录 `contest2026_377_moyumanbo/` 里开发。** 不同作品形态放在对应子目录，manifest 会通过 `<linkfile>` 把它们**软链**到 openvela 编译树该在的位置——你不用手动 copy：
+本版本依赖 `vendor/sifli` 的显示适配；仅同步官方基线不能保证本演示正常显示。
 
-| 作品形态 | 你的代码放这里             | 系统自动映射到                                 |
-| -------- | -------------------------- | ---------------------------------------------- |
-| 应用     | `app/hello_app/`           | `packages/demos/contest2026_377_hello_app`     |
-| 快应用   | `quickapp/hello_quickapp/` | `packages/apps/contest2026_377_hello_quickapp` |
-| 板级适配 | `board/contest_board/`     | `vendor/openvela/boards/contest2026_377_board` |
+完整补丁基于 `open-vela/vendor_sifli` 的 `af6f365eaa04a674af0467aa1a803bc4c77691ba`。在**新建、无本地改动的验证工作区**中：
 
-> 用不到的形态目录可以删掉；新增作品时按同样规则加子目录，并在 `contest2026_377_moyumanbo.xml` 里补一条 `<linkfile>` 映射即可。**生产仓库（packages/nuttx/vendor 等）零改动。**
+~~~sh
+git -C vendor/sifli switch --detach af6f365eaa04a674af0467aa1a803bc4c77691ba
+git -C vendor/sifli apply --check \
+  ../../contest2026_377_moyumanbo/board/velasense/patches/vendor-sifli-co5300-demo.patch
+git -C vendor/sifli apply \
+  ../../contest2026_377_moyumanbo/board/velasense/patches/vendor-sifli-co5300-demo.patch
+~~~
 
-建议仓库目录约定（便于评委定位）：
+已应用补丁、或已经包含对应 BSP 提交的工作区不要重复应用。补丁对应的独立 BSP 提交为 `3de4b2cd50ef85069e26e7a63c17a2fa780296d2`；官方公共仓的合入需要维护者 review，详见 [提交说明](docs/demo/submission.md)。
 
-```text
-app/ | quickapp/ | board/   # 你的作品代码
-logs/                       # AI Coding 日志（主动导出后提交，格式见 logs/README.md）
-README.md                   # 作品说明（提交前请改成你自己的，见第六节）
-```
+验证所用 openvela 依赖版本记录于 [workspace-revisions.json](docs/demo/workspace-revisions.json)。特别注意 LVGL 是 manifest 中的独立仓库 `apps/graphics/lvgl/lvgl`，使用 openvela 的 `0f2a49f588505a00e8b46e25a34581c87291a62a`（9.1.0）；不要用原生 LVGL ZIP 代替该适配仓库。
 
-> 仓内附带了一个 `.gitignore.example`，给出了**编译产物**等不需要进仓的文件示例。如需启用，`cp .gitignore.example .gitignore` 后按需增删即可。**注意 `logs/` 下最终导出的 AI Coding 日志必须提交，不要忽略。**
->
-> `logs/` 的目录结构与提交格式见 [logs/README.md](logs/README.md)。
+~~~sh
+python3 contest2026_377_moyumanbo/tools/build_ui_demo.py
+~~~
 
----
+产物：`cmake_out/velasense_ui_demo/nuttx`（ELF）、`nuttx.bin`（应用固件）。脚本自动建立应用映射，配置更改时重新展开 Kconfig；不构建 `firmware/apps/velasense/`。
 
-## 四、第三步：编译与运行
+### 烧录
 
-编译/运行步骤随作品形态不同而不同，请参考你所在赛道的教程导航：
+开发板：SF32LB52-DevKit-LCD，CO5300 390×450，FT6146。使用官方 [OpenSiFli/sftool](https://github.com/OpenSiFli/sftool) 0.2.5，将 `nuttx.bin` 复制到 Windows 后执行（串口名替换为实际设备）：
 
-- 快应用 / 手表应用：[快应用教程导航](https://github.com/open-vela/docs/blob/dev-ai-contest-2026/zh-cn/contest_2026/quickapp/quickapp_guide_index.md)（含模拟器与开发板部署）。
-- AI 硬件产品创新：[AI 硬件赛道教程导航](https://github.com/open-vela/docs/blob/dev-ai-contest-2026/zh-cn/contest_2026/ai_hardware/ai_hardware_guide_index.md)（环境搭建、编译烧录、Skill 开发）。
-- 新硬件适配：[新硬件适配赛道教程导航](https://github.com/open-vela/docs/blob/dev-ai-contest-2026/zh-cn/contest_2026/hardware_porting/hardware_porting_guide_index.md)（BSP 移植、最小 NSH 基线）。
+~~~powershell
+.\sftool.exe -c SF32LB52 -p COM11 -b 1000000 --compat true write_flash --verify nuttx.bin@0x12010000
+~~~
 
-子目录已通过 manifest 中的 `<linkfile>` 软链进 openvela 编译树，因此构建在 openvela 工作区**根目录**（即你这个仓的上一级）进行。openvela 使用 `build.sh` 作为统一入口，接收一个 **board config 路径**作为参数：
+已测试设备需要 `--compat true`。该命令只写应用区，保留板上已有引导程序；本提交不包含 bootloader。不要对其他板型直接套用地址。关闭占用串口的终端后烧录。
 
-```bash
-# 进入 openvela 工作区根目录（你的仓的上一级）
-cd ..
+串口诊断：1000000 baud，8N1，无流控，DTR/RTS 关闭。
 
-# 通用语法：第一个参数是 board config 路径，第二个参数可以是 menuconfig / distclean 等
-./build.sh <board-config-path> [menuconfig|distclean] [-j8]
-```
+~~~text
+velasense status
+velasense page 0
+velasense page 1
+velasense page 2
+velasense page 3
+~~~
 
-> 具体的 board config 路径、目标产物、模拟器/真机部署方式请以你所在赛道的教程导航为准。本仓 `app/` `quickapp/` `board/` 三个示例骨架对应的 Kconfig 选项可通过 `menuconfig` 启用。
+页面编号依次为首页、趋势、呼吸、设置。`frames` 与 `heartbeat` 应增长。默认每 8 秒轮播；弹窗或呼吸练习期间暂停轮播。重启不保留设置和心情。
 
----
+## 主机预览
 
-## 五、第四步：提交作品
+完成工作区同步后：
 
-1. **fork** 你的专属仓 → 开发 → `git commit` 并推送 → 向专属仓发起 **Pull Request**，可**自行 review 并合入**（无需等组委会）。
-2. **AI Coding 日志**：与 AI 工具的对话会自动记录到本机 staging（不会自动上传），需你**主动导出/打包**选定会话到仓内 `logs/` 目录后一并提交。详见[《AI Coding 日志归集与提交手册》](https://github.com/open-vela/docs/blob/dev-ai-contest-2026/zh-cn/contest_2026/ai_coding_log_guide.md)。
-3. 若需改动 **nuttx 等公共仓库**，不在本仓改，而是 fork 对应公共仓、以 PR 提交到 `dev-ai-contest-2026` 分支，由组委会 review 后合入。
+~~~sh
+cmake -S contest2026_377_moyumanbo/tools/ui_preview -B cmake_out/velasense_ui_preview
+cmake --build cmake_out/velasense_ui_preview --parallel 8
+mkdir -p /tmp/velasense-preview
+cmake_out/velasense_ui_preview/velasense_preview /tmp/velasense-preview
+~~~
 
-> ⏰ **提交作品截止：9 月 20 日**。截止后统一收回 push 权限，仍可查看 / clone。
->
-> 获奖后再按要求将作品 PR 至 openvela 上游对应仓库（走标准 PR + CI 流程）。
+输出 PPM 图片，并检查导航、弹窗、呼吸阶段、轮播及 400 次切页。主机预览不能替代实机触摸、功耗和可靠性验证。
 
-### 关于 PR 与 CLA
+## AI Coding 使用说明
 
-- 本仓所有改动通过 **Pull Request** 合入（分支保护强制，可自行合入自己的 PR）。
-- 首次贡献需在[**官网签署 CLA**](https://openvela.com/#/community/cla)；PR 上会自动跑 `cla/signature` 检查，在官网签署成功后，在 PR 评论 `/check-cla` 复检即可通过。
+早期使用 Claude Code/MiMo 协作进行需求拆解、模块编写和设计。后续使用 Codex 审阅项目、完成隔离的 UI 演示、调试定时器和屏幕传输、修正配色和中文字体、验证主机交互，并整理本次提交。
 
----
+用户逐轮提供实机反馈（黑屏、异常颜色、缺字、布局调整），据此修复界面。当前仓库的功能说明以本 README 和验证记录为准；早期提交标题中的“complete”等描述不作为完成度证明。
 
-## 六、提交前：把本 README 改成你的作品说明
+[AI 日志清单](logs/INKT-love/manifest.json) 与 [导出范围](logs/INKT-love/EXPORT_NOTES.md) 说明了工具、时间和日志完整性。本次 Codex 导出为用户可见文本快照，未包含工具输出；凭据、个人目录、系统指令和私有推理不会公开。中文字体采用 Noto Sans CJK SC 子集，许可证与生成说明见 `app/velasense_demo/fonts/`。
 
-本文件目前是组委会给的**使用说明书**。**作品提交前，请把它替换成你自己作品的说明**，方便评委快速了解你做了什么、怎么跑起来。建议至少包含以下内容：
+## 提交路径
 
-```markdown
-# <你的作品名>
+开发提交推送到 [个人 fork](https://github.com/INKT-love/contest2026_377_moyumanbo)，再通过 PR 合入 [官方团队仓](https://github.com/open-vela/contest2026_377_moyumanbo) 的 `dev-ai-contest-2026`。公共 BSP 另向对应官方公共仓发起 PR。
 
-## 一、作品简介
-<一句话/一段话说明这个作品是什么、解决什么问题、亮点在哪>
-
-## 二、选题方向
-<快应用 / 手表应用创新 ｜ AI 硬件产品创新 ｜ 新硬件适配 ｜ 自定方向，并简述理由>
-
-## 三、目录结构
-<列出你这个仓里各目录/文件的作用，例如：>
-- `app/xxx/`        — <说明>
-- `board/xxx/`      — <说明>
-- `quickapp/xxx/`   — <说明>
-- `logs/`           — AI Coding 日志
-- `docs/` 或其他    — <说明>
-
-## 四、运行方式
-<拉取工程后，如何编译、烧录/部署、运行的完整步骤；最好能让评委照着一步步复现>
-
-## 五、AI Coding 使用说明
-<说明本作品如何借助 AI 辅助开发：
-- 在需求拆解 / 方案设计 / 编码 / 调试 / 文档等环节如何与 AI 协作；
-- AI 对开发效率或质量带来的实际帮助。
-完整对话日志见 logs/ 目录>
-```
-
-> 提示：将会根据「作品本身 + 你的 README 说明 + `logs/` 里的 AI Coding 日志」来理解和评估你的作品，README 写清楚很重要。
-
----
-
-## 附：仓库命名规范
-
-`contest2026_<编号>_<队伍名>` — 编号三位零填充；队名 slug（全小写、英文/拼音、连字符）。例：`contest2026_377_moyumanbo`。
-（仓库由组委会统一创建，**每队仅一个仓**，无需自行命名。）
+流程依据：[官方代码提交指南](https://github.com/open-vela/docs/blob/dev-ai-contest-2026/zh-cn/contest_2026/code_submission_guide.md)、[AI Coding 日志指南](https://github.com/open-vela/docs/blob/dev-ai-contest-2026/zh-cn/contest_2026/ai_coding_log_guide.md)。

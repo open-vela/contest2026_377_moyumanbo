@@ -1,0 +1,2 @@
+# Unified patches contain significant leading context markers.
+*.patch -whitespace

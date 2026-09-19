@@ -2,20 +2,47 @@
   "schema_version": "1.0",
   "team_id": "contest2026_377_moyumanbo",
   "github_login": "INKT-love",
-  "generator": "claude-code-collector@1.3.0",
-  "updated_at": "2026-08-11T13:59:08.198Z",
+  "generator": "contest-collector plus scoped Codex visible-message snapshot",
+  "updated_at": "2026-09-19T08:23:56.795680+00:00",
   "sessions": [
     {
       "session_id": "8ef7c8c0-4792-4d01-a929-922fbd8170f3",
       "tool": "claude-code",
-      "started_at": "2026-08-11T13:02:50.941Z",
-      "last_event_at": "2026-08-11T13:59:08.194Z",
-      "event_count": 438,
-      "raw_event_count": 702,
+      "started_at": "2026-08-11T12:38:57.873Z",
+      "last_event_at": "2026-08-11T15:13:36.703Z",
+      "event_count": 645,
+      "raw_event_count": 1132,
       "file_path": "logs/INKT-love/2026-08-11/claude-code__8ef7c8c0-4792-4d01-a929-922fbd8170f3.jsonl",
       "collection_mode": "cli",
       "health": "ok",
-      "model": "mimo-v2.5-pro"
+      "model": "mimo-v2.5-pro",
+      "redacted_count_total": 464
+    },
+    {
+      "session_id": "00c60b71-1b22-45f0-bc86-56a3e4568f97",
+      "tool": "claude-code",
+      "started_at": "2026-08-22T13:04:45.799Z",
+      "last_event_at": "2026-08-22T13:07:16.179Z",
+      "event_count": 61,
+      "raw_event_count": 81,
+      "file_path": "logs/INKT-love/2026-08-22/claude-code__00c60b71-1b22-45f0-bc86-56a3e4568f97.jsonl",
+      "collection_mode": "cli",
+      "health": "ok",
+      "model": "mimo-v2.5-pro",
+      "redacted_count_total": 79
+    },
+    {
+      "session_id": "01a0b530-421a-7041-8009-6f1131533eb1",
+      "tool": "codex",
+      "started_at": "2026-09-18T15:43:55.385Z",
+      "last_event_at": "2026-09-19T08:21:24.572Z",
+      "event_count": 75,
+      "raw_event_count": 1927,
+      "file_path": "logs/INKT-love/2026-09-18/codex__01a0b530-421a-7041-8009-6f1131533eb1.jsonl",
+      "collection_mode": "vscode_extension_partial",
+      "health": "degraded",
+      "redacted_count_total": 48,
+      "data_completeness_warning": "User-visible text snapshot from the explicitly selected project task; excludes tool calls/results, system/developer instructions, private reasoning, binary images, aborted-only continuations and environment metadata. Credentials and local user paths redacted. Snapshot ends before final PR creation."
     }
   ]
 }

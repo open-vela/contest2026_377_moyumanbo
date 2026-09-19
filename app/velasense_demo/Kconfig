@@ -1,0 +1,11 @@
+config VELASENSE_UI_DEMO
+  bool "VelaSense display demo"
+  default n
+  depends on GRAPHICS_LVGL
+  depends on LV_USE_NUTTX_LCD
+  select LV_FONT_MONTSERRAT_18
+  select LV_FONT_MONTSERRAT_24
+  select LV_FONT_MONTSERRAT_48
+  ---help---
+    Display-only VelaSense application with sample data. No sensors,
+    Bluetooth, model, or storage required. Builtin command: velasense.
